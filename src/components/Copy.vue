@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Copy, Loading, CheckOne } from "@icon-park/vue-next";
+import { Copy, Loading, CheckOne, CloseOne } from "@icon-park/vue-next";
 import type { Theme } from "@icon-park/vue-next/lib/runtime";
 import { ref } from "vue";
 

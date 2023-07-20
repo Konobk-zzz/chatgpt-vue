@@ -41,12 +41,16 @@
       </div>
       <div class="flex">
         <input
+          ref="messageInput"
           class="input"
           :type="isConfig ? 'password' : 'text'"
           :placeholder="isConfig ? 'sk-xxxxxxxxxx' : '请输入'"
           v-model="messageContent"
           @keydown.meta.enter="isTalking || sendOrSave()"
+          @focusin="showShotcutKey = !showShotcutKey"
+          @focusout="showShotcutKey = !showShotcutKey"
         />
+        <span v-show="showShotcutKey" class="shotcutKey">⌘K</span>
         <button class="btn" :disabled="isTalking" @click="sendOrSave()">
           {{ isConfig ? "保存" : "发送" }}
         </button>
@@ -57,7 +61,7 @@
 
 <script setup lang="ts">
 import type { ChatMessage } from "@/types";
-import { ref, watch, nextTick, onMounted } from "vue";
+import { ref, watch, nextTick, onMounted, onBeforeUnmount } from "vue";
 import { chat } from "@/libs/gpt";
 import cryptoJS from "crypto-js";
 import Loding from "@/components/Loding.vue";
@@ -68,6 +72,7 @@ let apiKey = "";
 let isConfig = ref(true);
 let isTalking = ref(false);
 let messageContent = ref("");
+let messageInput = ref<HTMLInputElement|null>(null);
 const chatListDom = ref<HTMLDivElement>();
 const decoder = new TextDecoder("utf-8");
 const roleAlias = { user: "ME", assistant: "ChatGPT", system: "System" };
@@ -89,11 +94,19 @@ const messageList = ref<ChatMessage[]>([
 请告诉我你需要哪方面的帮助，我会根据你的需求给你提供相应的信息和建议。`,
   },
 ]);
+const showShotcutKey = ref(true)
 
 onMounted(() => {
   if (getAPIKey()) {
     switchConfigStatus();
   }
+  // 注册窗口按键监听
+  window.addEventListener('keydown', handleWindowKeyDown);
+});
+
+onBeforeUnmount(() => {
+  // 取消注册窗口按键监听
+  window.removeEventListener('keydown', handleWindowKeyDown);
 });
 
 const sendChatMessage = async (content: string = messageContent.value) => {
@@ -212,6 +225,12 @@ const scrollToBottom = () => {
   scrollTo(0, chatListDom.value.scrollHeight);
 };
 
+const handleWindowKeyDown = (event: KeyboardEvent) => {
+  if ((event.metaKey || event.ctrlKey) && event.key === 'k') {
+    messageInput.value?.focus();
+  }
+};
+
 watch(messageList.value, () => nextTick(() => scrollToBottom()));
 </script>
 
@@ -222,5 +241,9 @@ pre {
     "Noto Sans CJK SC", "Source Han Sans SC", "Source Han Sans CN",
     "Microsoft YaHei", "Wenquanyi Micro Hei", "WenQuanYi Zen Hei", "ST Heiti",
     SimHei, "WenQuanYi Zen Hei Sharp", sans-serif;
+}
+
+.shotcutKey {
+  position: absolute;right: 130px; top: 34%; background-color: #f1f2f4; border-radius: 10px; padding-left: 8px; padding-right: 8px; color: #0045ce;
 }
 </style>
