@@ -50,7 +50,7 @@
           @focusin="showShotcutKey = !showShotcutKey"
           @focusout="showShotcutKey = !showShotcutKey"
         />
-        <span v-show="showShotcutKey" class="shotcutKey">⌘K</span>
+        <span v-show="showShotcutKey" class="shotcutKey">{{ InputAreaHotKeyDesc }}</span>
         <button class="btn" :disabled="isTalking" @click="sendOrSave()">
           {{ isConfig ? "保存" : "发送" }}
         </button>
@@ -95,6 +95,7 @@ const messageList = ref<ChatMessage[]>([
   },
 ]);
 const showShotcutKey = ref(true)
+const InputAreaHotKeyDesc = ref(navigator.platform.toLowerCase().indexOf('win') > -1 ? "Ctrl /" : "⌘ /")
 
 onMounted(() => {
   if (getAPIKey()) {
@@ -198,7 +199,7 @@ const clickConfig = () => {
 const getSecretKey = () => "lianginx";
 
 const saveAPIKey = (apiKey: string) => {
-  if (apiKey.slice(0, 3) !== "sk-" || apiKey.length !== 51) {
+  if (apiKey.slice(0, 3) !== " sk-" || apiKey.length !== 51) {
     alert("API Key 错误，请检查后重新输入！");
     return false;
   }
@@ -226,7 +227,7 @@ const scrollToBottom = () => {
 };
 
 const handleWindowKeyDown = (event: KeyboardEvent) => {
-  if ((event.metaKey || event.ctrlKey) && event.key === 'k') {
+  if ((event.metaKey || event.ctrlKey) && event.key === '/') {
     messageInput.value?.focus();
   }
 };
