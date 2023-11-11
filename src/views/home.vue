@@ -78,8 +78,8 @@ const decoder = new TextDecoder("utf-8");
 const roleAlias = { user: "ME", assistant: "ChatGPT", system: "System" };
 const messageList = ref<ChatMessage[]>([
   {
-    role: "system",
-    content: "你是 ChatGPT，OpenAI 训练的大型语言模型，尽可能简洁地回答。",
+    "role": "system",
+    "content": "\nYou are ChatGPT, a large language model trained by OpenAI.\n"
   },
   {
     role: "assistant",
@@ -92,7 +92,7 @@ const messageList = ref<ChatMessage[]>([
 3. 闲聊：如果你感到寂寞或无聊，我们可以聊一些有趣的话题，以减轻你的压力。
 
 请告诉我你需要哪方面的帮助，我会根据你的需求给你提供相应的信息和建议。`,
-  },
+  }
 ]);
 const showShotcutKey = ref(true)
 const InputAreaHotKeyDesc = ref(navigator.platform.toLowerCase().indexOf('win') > -1 ? "Ctrl /" : "⌘ /")
@@ -160,13 +160,17 @@ const readStream = async (
     for (const line of newLines) {
       if (line.length === 0) continue; // ignore empty message
       if (line.startsWith(":")) continue; // ignore sse comment message
-      if (line === "data: [DONE]") return; //
+      if (!line.startsWith("data: ")) throw new Error('Received Illegal Chat Data');
+      if (line === "data: [DONE]") return; // stream finish
 
-      const json = JSON.parse(line.substring(6)); // start with "data: "
+      const data = JSON.parse(line.substring(6)); // start with "data: "
+      let choices = data.choices;
+      if (Array.isArray(choices) && choices.length === 0) continue; // skip transfer or gpt-4 first msg
+
       const content =
         status === 200
-          ? json.choices[0].delta.content ?? ""
-          : json.error.message;
+          ? choices[0].delta.content ?? ""
+          : data.error.message;
       appendLastMessageContent(content);
     }
   }
